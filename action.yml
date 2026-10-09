@@ -1,0 +1,75 @@
+name: didrun scheduled-run check
+description: Did this repo's scheduled workflows run when they should have? Late, missed, failed and green-but-empty runs, and workflows GitHub disabled, from GitHub's own run history.
+author: agentwares
+branding:
+  icon: clock
+  color: orange
+
+# Runs the built CLI from this repository's committed dist/ on your own runner: no npm install, no
+# account. Its only requests are GETs to GitHub's API with the token below.
+inputs:
+  repo:
+    description: The repository to check, owner/repo (default, the one this workflow runs in)
+    required: false
+    default: ${{ github.repository }}
+  days:
+    description: How many days back to check, 1 to 30
+    required: false
+    default: "7"
+  late-minutes:
+    description: Minutes after its scheduled time at which a run counts as late
+    required: false
+    default: "30"
+  fail-on:
+    description: "`missed` fails the job when a scheduled run never came or a schedule is disabled; `problem` on anything reported; `never` (default) only reports."
+    required: false
+    default: never
+  token:
+    description: Token for GitHub's API. It needs actions read and contents read on the repo; the job's own token has both with `permissions` set as in the README.
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  missed:
+    description: Scheduled runs that never came in the window
+    value: ${{ steps.check.outputs.missed }}
+  late:
+    description: Scheduled runs created later than late-minutes
+    value: ${{ steps.check.outputs.late }}
+  problems:
+    description: Everything reported, from missed runs to disabled schedules
+    value: ${{ steps.check.outputs.problems }}
+  report:
+    description: Path to the full JSON report
+    value: ${{ steps.check.outputs.report }}
+
+runs:
+  using: composite
+  steps:
+    - id: check
+      shell: bash
+      env:
+        DIDRUN_REPO: ${{ inputs.repo }}
+        DIDRUN_DAYS: ${{ inputs.days }}
+        DIDRUN_LATE: ${{ inputs.late-minutes }}
+        DIDRUN_FAIL_ON: ${{ inputs.fail-on }}
+        GITHUB_TOKEN: ${{ inputs.token }}
+      run: |
+        set +e
+        case "$DIDRUN_FAIL_ON" in missed|problem|never) ;; *) echo "didrun: fail-on must be missed, problem or never; got \"$DIDRUN_FAIL_ON\""; exit 2 ;; esac
+        report="$RUNNER_TEMP/didrun.json"
+        node "$GITHUB_ACTION_PATH/dist/cli.js" "$DIDRUN_REPO" --days "$DIDRUN_DAYS" --late "$DIDRUN_LATE" --json > "$report"
+        code=$?
+        if [ "$code" -ne 0 ]; then cat "$report"; exit "$code"; fi
+        REPORT="$report" node --input-type=module -e '
+          import { readFileSync, appendFileSync } from "node:fs";
+          import { pathToFileURL } from "node:url";
+          const { renderText, failed } = await import(pathToFileURL(process.env.GITHUB_ACTION_PATH + "/dist/index.js").href);
+          const report = JSON.parse(readFileSync(process.env.REPORT, "utf8"));
+          const text = renderText(report);
+          process.stdout.write(text);
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, "```\n" + text + "```\n");
+          const s = report.summary;
+          appendFileSync(process.env.GITHUB_OUTPUT, `missed=${s.missed}\nlate=${s.late}\nproblems=${s.problems}\nreport=${process.env.REPORT}\n`);
+          if (failed(report, process.env.DIDRUN_FAIL_ON)) process.exitCode = 1;
+        '

@@ -1,0 +1,18 @@
+{
+  "name": "didrun",
+  "version": "0.1.0",
+  "description": "Did this repo's scheduled GitHub workflows run when their cron said they would? Late, missed, failed and green-but-empty runs, workflows GitHub disabled, and a public repo's 60-day countdown, from GitHub's own run history. Runs npx --allow-git=root github:agentwares/didrun with your own GitHub token; no account, no LLM calls of its own.",
+  "author": {
+    "name": "agentwares",
+    "url": "https://github.com/agentwares"
+  },
+  "homepage": "https://agentwares-agentcheck.vercel.app/didrun",
+  "documentationUrl": "https://github.com/agentwares/didrun#readme",
+  "repository": "https://github.com/agentwares/didrun",
+  "privacyPolicyUrl": "https://agentwares-agentcheck.vercel.app/privacy",
+  "termsOfServiceUrl": "https://agentwares-agentcheck.vercel.app/terms",
+  "supportUrl": "https://agentwares.vercel.app/contact",
+  "license": "MIT",
+  "icon": "./.claude-plugin/icon.png",
+  "keywords": ["github-actions", "cron", "scheduled-workflows", "cron-monitoring", "missed-runs"]
+}

@@ -1,0 +1,22 @@
+# .github/workflows/didrun.yml — check every day that this repo's scheduled workflows ran when their
+# cron said they would. A check that runs on GitHub's scheduler shares its delays and drops, so this
+# one also runs on every push to main and by hand.
+name: Did the scheduled runs run
+on:
+  schedule:
+    - cron: "23 8 * * *"
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  actions: read
+  contents: read
+jobs:
+  didrun:
+    runs-on: ubuntu-latest
+    steps:
+      - id: check
+        uses: agentwares/didrun@main
+        with:
+          fail-on: missed
+      - run: echo "${{ steps.check.outputs.missed }} missed, ${{ steps.check.outputs.late }} late"

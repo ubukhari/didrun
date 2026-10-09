@@ -1,0 +1,17 @@
+{
+  "name": "didrun",
+  "description": "didrun inside Claude Code: did this repo's scheduled GitHub workflows run when their cron said they would? Late, missed, failed and green-but-empty runs and workflows GitHub disabled, from GitHub's own run history with your own token. Open source, no account.",
+  "owner": {
+    "name": "agentwares",
+    "url": "https://github.com/agentwares"
+  },
+  "plugins": [
+    {
+      "name": "didrun",
+      "source": "./plugins/didrun",
+      "description": "Check whether scheduled GitHub Actions workflows ran. /didrun:didrun runs `npx --allow-git=root github:agentwares/didrun` on a repo and explains each late, missed, failed or green-but-empty run and each disabled schedule, with what GitHub documents as the cause and the fix for you to approve.",
+      "category": "development",
+      "tags": ["github-actions", "cron", "scheduled-workflows", "cron-monitoring", "missed-runs"]
+    }
+  ]
+}
